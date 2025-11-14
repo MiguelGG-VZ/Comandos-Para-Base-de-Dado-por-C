@@ -1,0 +1,219 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 100
+
+// ===== Estruturas =====
+typedef struct {
+    char usuario[50];
+    char senha[50];
+    char tipo[20];
+} Usuario;
+
+typedef struct {
+    char codigo[20];
+    char nome[50];
+} Turma;
+
+typedef struct {
+    char aluno[50];
+    char turma[20];
+    float nota;
+    int faltas;
+} Dado;
+
+// ===== Funções =====
+void inicializarArquivo();
+void menuPrincipal();
+void cadastrarUsuario();
+void listarUsuarios();
+void cadastrarTurma();
+void listarTurmas();
+void registrarNotaFalta();
+void listarDados();
+
+// ===== MAIN =====
+int main() {
+    inicializarArquivo();
+    menuPrincipal();
+    return 0;
+}
+
+// ===== Inicialização =====
+void inicializarArquivo() {
+    FILE *f = fopen("banco.csv", "r");
+    if (!f) {
+        f = fopen("banco.csv", "w");
+        fprintf(f, "tipo,campo1,campo2,campo3,campo4\n");
+        fclose(f);
+        printf("[INFO] Arquivo 'banco.csv' criado.\n");
+    } else fclose(f);
+}
+
+// ===== Menu Principal =====
+void menuPrincipal() {
+    int op;
+
+    do {
+        printf("\n====== MENU PRINCIPAL ======\n");
+        printf("1. Cadastrar Usuario\n");
+        printf("2. Listar Usuarios\n");
+        printf("3. Cadastrar Turma\n");
+        printf("4. Listar Turmas\n");
+        printf("5. Registrar Nota/Falta\n");
+        printf("6. Listar Dados\n");
+        printf("0. Sair\nEscolha: ");
+        scanf("%d", &op);
+        getchar();
+
+        switch (op) {
+            case 1: cadastrarUsuario(); break;
+            case 2: listarUsuarios(); break;
+            case 3: cadastrarTurma(); break;
+            case 4: listarTurmas(); break;
+            case 5: registrarNotaFalta(); break;
+            case 6: listarDados(); break;
+            case 0: printf("Saindo...\n"); break;
+            default: printf("Opcao invalida!\n");
+        }
+    } while (op != 0);
+}
+
+// ===== Cadastro de Usuário =====
+void cadastrarUsuario() {
+    Usuario u;
+    int tipo;
+
+    printf("\n=== Cadastro Usuario ===\n");
+    printf("Usuario: ");
+    fgets(u.usuario, 50, stdin);
+    u.usuario[strcspn(u.usuario, "\n")] = 0;
+
+    printf("Senha: ");
+    fgets(u.senha, 50, stdin);
+    u.senha[strcspn(u.senha, "\n")] = 0;
+
+    printf("Tipo (1-Adm, 2-Prof, 3-Aluno): ");
+    scanf("%d", &tipo);
+    getchar();
+
+    if (tipo == 1) strcpy(u.tipo, "Administrador");
+    else if (tipo == 2) strcpy(u.tipo, "Professor");
+    else strcpy(u.tipo, "Aluno");
+
+    FILE *f = fopen("banco.csv", "a");
+    fprintf(f, "Usuario,%s,%s,%s,\n", u.usuario, u.senha, u.tipo);
+    fclose(f);
+
+    printf("Usuario cadastrado!\n");
+}
+
+void listarUsuarios() {
+    FILE *f = fopen("banco.csv", "r");
+    if (!f) return;
+
+    printf("\n=== Usuarios ===\n");
+
+    char tipo[20], c1[50], c2[50], c3[50], c4[50];
+    char linha[200];
+    fgets(linha, 200, f);
+
+    while (fscanf(f, "%[^,],%[^,],%[^,],%[^,],%[^\n]\n",
+            tipo, c1, c2, c3, c4) == 5) {
+
+        if (strcmp(tipo, "Usuario") == 0)
+            printf("Usuario: %s | Tipo: %s\n", c1, c3);
+    }
+    fclose(f);
+}
+
+// ===== Turmas =====
+void cadastrarTurma() {
+    Turma t;
+
+    printf("\n=== Cadastro Turma ===\n");
+    printf("Codigo: ");
+    fgets(t.codigo, 20, stdin);
+    t.codigo[strcspn(t.codigo, "\n")] = 0;
+
+    printf("Nome: ");
+    fgets(t.nome, 50, stdin);
+    t.nome[strcspn(t.nome, "\n")] = 0;
+
+    FILE *f = fopen("banco.csv", "a");
+    fprintf(f, "Turma,%s,%s,,\n", t.codigo, t.nome);
+    fclose(f);
+
+    printf("Turma cadastrada!\n");
+}
+
+void listarTurmas() {
+    FILE *f = fopen("banco.csv", "r");
+    if (!f) return;
+
+    printf("\n=== Turmas ===\n");
+
+    char tipo[20], c1[50], c2[50], c3[50], c4[50];
+    char linha[200];
+    fgets(linha, 200, f);
+
+    while (fscanf(f, "%[^,],%[^,],%[^,],%[^,],%[^\n]\n",
+            tipo, c1, c2, c3, c4) == 5) {
+
+        if (strcmp(tipo, "Turma") == 0)
+            printf("Codigo: %s | Nome: %s\n", c1, c2);
+    }
+
+    fclose(f);
+}
+
+// ===== Dados de notas/faltas =====
+void registrarNotaFalta() {
+    Dado d;
+
+    printf("\n=== Registrar Nota/Falta ===\n");
+
+    printf("Aluno: ");
+    fgets(d.aluno, 50, stdin);
+    d.aluno[strcspn(d.aluno, "\n")] = 0;
+
+    printf("Turma: ");
+    fgets(d.turma, 20, stdin);
+    d.turma[strcspn(d.turma, "\n")] = 0;
+
+    printf("Nota: ");
+    scanf("%f", &d.nota);
+
+    printf("Faltas: ");
+    scanf("%d", &d.faltas);
+    getchar();
+
+    FILE *f = fopen("banco.csv", "a");
+    fprintf(f, "Dado,%s,%s,%.2f,%d\n",
+        d.aluno, d.turma, d.nota, d.faltas);
+    fclose(f);
+
+    printf("Registro salvo!\n");
+}
+
+void listarDados() {
+    FILE *f = fopen("banco.csv", "r");
+    if (!f) return;
+
+    printf("\n=== Dados (Notas/Faltas) ===\n");
+
+    char tipo[20], c1[50], c2[50], c3[50], c4[50];
+    char linha[200];
+    fgets(linha, 200, f);
+
+    while (fscanf(f, "%[^,],%[^,],%[^,],%[^,],%[^\n]\n",
+            tipo, c1, c2, c3, c4) == 5) {
+
+        if (strcmp(tipo, "Dado") == 0)
+            printf("Aluno: %s | Turma: %s | Nota: %s | Faltas: %s\n",
+                   c1, c2, c3, c4);
+    }
+
+    fclose(f);
+}
